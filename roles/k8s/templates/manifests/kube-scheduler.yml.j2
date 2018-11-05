@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    component: kube-scheduler
+    tier: control-plane
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  containers:
+  - name: kube-scheduler
+    image: k8s.gcr.io/kube-scheduler-amd64:v{{ pillar.k8s_common.version }}
+    command:
+      - kube-scheduler
+      - --v={{ pillar.k8s_comp.scheduler.log_level }}
+      - --logtostderr=true
+      - --address=127.0.0.1
+      - --leader-elect=true
+      {% if pillar.k8s_comp.scheduler.feature_gates != '' -%}
+      - --feature-gates={{ pillar.k8s_comp.scheduler.feature_gates }}
+      {% endif -%}
+      - --kubeconfig={{ pillar.k8s_common.conf_dir }}/scheduler.conf
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10251
+        scheme: HTTP
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 100m
+    volumeMounts:
+    - mountPath: {{ pillar.ca_common.cert_dir }}
+      name: ca-certs
+      readOnly: true
+    - mountPath: {{ pillar.k8s_common.conf_dir }}/scheduler.conf
+      name: kubeconfig
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: {{ pillar.ca_common.cert_dir }}
+      type: DirectoryOrCreate
+    name: ca-certs
+  - hostPath:
+      path: {{ pillar.k8s_common.conf_dir }}/scheduler.conf
+      type: FileOrCreate
+    name: kubeconfig

@@ -1,0 +1,5 @@
+etcd_common:
+  default:
+    conf_dir: /etc/etcd
+    data_dir: /var/lib/etcd
+    wal_dir: /var/lib/etcd/wal

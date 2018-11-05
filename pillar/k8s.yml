@@ -1,0 +1,181 @@
+k8s_common:
+  default:
+    audit_log: audit.log
+    audit_policy: audit/policy.yml
+    bin_dir: "/usr/local/bin"
+    conf_dir: /etc/kubernetes
+    container_socket: /var/run/docker.sock
+    encryption_config: encryption/config.yml
+    # openssl rand -hex 16
+    encryption_token: ae6ae5ee4f60c1790b5df6c00b009d33
+    log_dir: /var/log/kubernetes
+    manifest_dir: /etc/kubernetes/manifests
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64
+    version: 1.12.1 
+
+k8s_pkgs:
+  default:
+    kubelet:
+      dest: kubelet
+      checksum: md5:54b8a760dd830dd156b89fae6240d1f4
+    kubectl:
+      dest: kubectl
+      checksum: md5:12a5e9b9da038bff6992055960b42a67
+
+k8s_network:
+  default:
+    cluster_cidr: 172.20.0.0/16
+    service_cidr: 172.21.0.0/16
+    service_port_range: 30000-32767
+    ingress_vip: 10.41.239.52
+    dns_ex_vip: 10.41.239.52
+    dns_ip: 172.21.0.10
+    internal_dn: cluster.local
+    external_dn: k8s.local
+
+k8s_network_addon:
+  default:
+    calico_typha:
+      config_files:
+        - rbac-kdd
+        - calico
+        - calicoctl
+    
+k8s_comp:
+  default:
+    api_server:
+      authorization_mode: "Node,RBAC"
+      bind_address: 0.0.0.0
+      disable_admission: "PersistentVolumeLabel"
+      enable_admission: "NodeRestriction"
+      feature_gates: "PodPriority=true"
+      insecure_port: 0
+      log_level: 0
+      secure_port: 6443 
+      vip: 10.41.239.51
+      vip_port: 8443 
+    controller_manager:
+      log_level: 0
+      feature_gates: "PodPriority=true"
+    kubelet:
+      bind_address: 0.0.0.0
+      bind_port: 10250
+      bind_healthz_address: 127.0.0.1
+      bind_healthz_port: 10248
+      bind_read_port: 10255
+      conf_file: /var/lib/kubelet/config.yml
+      feature_gates:
+        PodPriority: true
+    scheduler:
+      log_level: 0
+      feature_gates: "PodPriority=true"
+
+k8s_rbac:
+  default:
+    - kubelet_bootstrap
+    - apiserver_to_kubelet
+
+k8s_manifest:
+  default:
+    - etcd
+    - haproxy
+    - keepalived
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+k8s_addon:
+  default:
+    kubeproxy:
+      bind_address: 0.0.0.0
+      healthz_bind_address: 0.0.0.0:10256
+      ipvs_scheduler: rr
+      metrics_bind_address: 127.0.0.1:10249
+      mode: ipvs
+      syncPeriod: 30s
+      config_files:
+        - cm
+        - sa
+        - rbac
+        - ds
+    # https://github.com/coredns/deployment/tree/master/kubernetes
+    coredns:
+      config_files:
+        - cm
+        - sa
+        - rbac
+        - dp
+        - svc
+      upstreams:
+        - 10.40.46.51
+        - 10.40.46.52
+    coredns_ex:
+      namespace: external-dns
+      config_files:
+        - ns
+        - etcd-dp
+        - etcd-svc
+        - coredns-cm
+        - coredns-dp
+        - coredns-svc
+        - external-dns-sa
+        - external-dns-rbac
+        - external-dns-dp
+      upstreams:
+        - 10.40.46.51
+        - 10.40.46.52
+    dashboard:
+      secerts: k8s-dashboard-secret
+      config_files:
+        # https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+        - kubernetes-dashboard
+        # https://github.com/kubernetes/dashboard/wiki/Creating-sample-user
+        - sa
+        - rbac
+        - ingress
+    metrics_server:
+      config_files:
+        # https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8+
+        # https://github.com/kubernetes-incubator/metrics-server/issues/146
+        # insecure tls
+        # - name: metrics-server
+        #   image: k8s.gcr.io/metrics-server-amd64:v0.3.1
+        #   command:
+        #   - /metrics-server
+        #   - --kubelet-insecure-tls
+        - metrics-server-deployment
+        - metrics-apiservice
+        - metrics-server-service
+        - aggregated-metrics-reader
+        - auth-delegator
+        - auth-reader
+        - resource-reader
+    ingress_nginx:
+      config_files:
+        - ns
+        - cm
+        - sa
+        - rbac
+        - dp
+        - svc
+
+k8s_app:
+  default:
+    nginx:
+      config_files:
+        - dp
+        - svc
+        - ingress
+
+k8sk_addon:
+  default:
+    metrics_server:
+      config_files:
+        # https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8+
+        - metrics-server-deployment
+        - metrics-apiservice
+        - metrics-server-service
+        - aggregated-metrics-reader
+        - auth-delegator
+        - auth-reader
+        - resource-reader

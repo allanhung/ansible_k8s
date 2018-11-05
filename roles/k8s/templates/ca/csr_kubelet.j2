@@ -1,0 +1,16 @@
+{
+  "CN": "{{ pillar.ca.kubelet.Common_Name }}:{{ inventory_hostname }}",
+  "key": {
+    "algo": "{{ pillar.ca_common.key_algorithm }}",
+    "size": {{ pillar.ca_common.key_size }}
+  },
+  "names": [
+    {
+      "C": "{{ pillar.ca.kubelet.Country }}",
+      "ST": "{{ pillar.ca.kubelet.STate }}",
+      "L": "{{ pillar.ca.kubelet.Locality }}",
+      "O": "{{ pillar.ca.kubelet.Organization }}",
+      "OU": "{{ pillar.ca.kubelet.Organization_Unit }}"
+    }
+  ]
+}

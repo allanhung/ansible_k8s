@@ -1,0 +1,49 @@
+---
+- name: ensure cni config directory is create
+  file:
+    path: "{{ pillar.cni_common.conf_dir }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)
+
+- name: ensure kubelet config directory is create
+  file:
+    path: "{{ pillar.k8s_comp.kubelet.conf_file | dirname }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)
+
+- name: kubelet config
+  template:
+    src: kubelet_config.yml.j2
+    dest: "{{ pillar.k8s_comp.kubelet.conf_file }}"
+  notify: restart kubelet
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)
+
+- name: kubelet env file for systemd
+  template:
+    src: kubelet_env.j2
+    dest: "/etc/sysconfig/kubelet"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart kubelet
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)
+
+- name: kubelet systemd unit
+  template:
+    src: kubelet_systemd.j2
+    dest: /usr/lib/systemd/system/kubelet.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart kubelet
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)
+
+- name: Enable and restart kubelet engine
+  systemd:
+    name: kubelet
+    daemon_reload: yes
+    enabled: yes
+    state: started
+  when: inventory_hostname in (pillar.k8s_host.master) or (inventory_hostname in pillar.k8s_host.node)

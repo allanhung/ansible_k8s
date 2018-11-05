@@ -1,0 +1,16 @@
+{
+  "CN": "{{ pillar.ca.scheduler.Common_Name }}",
+  "key": {
+    "algo": "{{ pillar.ca_common.key_algorithm }}",
+    "size": {{ pillar.ca_common.key_size }}
+  },
+  "names": [
+    {
+      "C": "{{ pillar.ca.scheduler.Country }}",
+      "ST": "{{ pillar.ca.scheduler.STate }}",
+      "L": "{{ pillar.ca.scheduler.Locality }}",
+      "O": "{{ pillar.ca.scheduler.Organization }}",
+      "OU": "{{ pillar.ca.scheduler.Organization_Unit }}"
+    }
+  ]
+}

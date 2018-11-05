@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  containers :
+  - name: kube-apiserver
+    image: k8s.gcr.io/kube-apiserver-amd64:v{{ pillar.k8s_common.version }}
+    command:
+      - kube-apiserver
+      - --v={{ pillar.k8s_comp.api_server.log_level }}
+      - --logtostderr=true
+      - --allow-privileged=true
+      - --bind-address={{ pillar.k8s_comp.api_server.bind_address }}
+      - --secure-port={{ pillar.k8s_comp.api_server.secure_port }}
+      - --insecure-port={{ pillar.k8s_comp.api_server.insecure_port }}
+      - --advertise-address={{ pillar.k8s_comp.api_server.vip }}
+      - --service-cluster-ip-range={{ pillar.k8s_network.service_cidr }}
+      - --service-node-port-range={{ pillar.k8s_network.service_port_range }}
+      - --etcd-servers={% for host in pillar.k8s_host.etcd %}https://{{ hostvars[host].ansible_default_ipv4.address }}:2379{% if not loop.last %},{% endif %}{% endfor %}
+
+      - --etcd-cafile={{ pillar.ca_common.cert_dir }}/etcd_ca.pem
+      - --etcd-certfile={{ pillar.ca_common.cert_dir }}/etcd.pem
+      - --etcd-keyfile={{ pillar.ca_common.cert_dir }}/etcd-key.pem
+      - --client-ca-file={{ pillar.ca_common.cert_dir }}/k8s_ca.pem
+      - --tls-cert-file={{ pillar.ca_common.cert_dir }}/apiserver.pem
+      - --tls-private-key-file={{ pillar.ca_common.cert_dir }}/apiserver-key.pem
+      - --kubelet-client-certificate={{ pillar.ca_common.cert_dir }}/apiserver.pem
+      - --kubelet-client-key={{ pillar.ca_common.cert_dir }}/apiserver-key.pem
+      - --service-account-key-file={{ pillar.ca_common.cert_dir }}/sa.pub
+      - --requestheader-client-ca-file={{ pillar.ca_common.cert_dir }}/front_proxy_client_ca.pem
+      - --proxy-client-cert-file={{ pillar.ca_common.cert_dir }}/front_proxy_client.pem
+      - --proxy-client-key-file={{ pillar.ca_common.cert_dir }}/front_proxy_client-key.pem
+      - --requestheader-allowed-names={{ pillar.ca.front_proxy_client.Common_Name }}
+      - --requestheader-group-headers=X-Remote-Group
+      - --requestheader-extra-headers-prefix=X-Remote-Extra-
+      - --requestheader-username-headers=X-Remote-User
+      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+      - --disable-admission-plugins={{ pillar.k8s_comp.api_server.disable_admission }}
+      - --enable-admission-plugins={{ pillar.k8s_comp.api_server.enable_admission }}
+      - --authorization-mode={{ pillar.k8s_comp.api_server.authorization_mode }}
+      - --enable-bootstrap-token-auth=true
+      - --audit-log-maxage=30
+      - --audit-log-maxbackup=3
+      - --audit-log-maxsize=128
+      - --audit-log-path={{ pillar.k8s_common.log_dir }}/{{ pillar.k8s_common.audit_log }}
+      - --audit-policy-file={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
+      - --experimental-encryption-provider-config={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+      {% if pillar.k8s_comp.api_server.feature_gates != '' -%}
+      - --feature-gates={{ pillar.k8s_comp.api_server.feature_gates }}
+      {% endif -%}
+      - --event-ttl=1h
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: {{ pillar.k8s_comp.api_server.secure_port }}
+        scheme: HTTPS
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 250m
+    volumeMounts:
+    - mountPath: {{ pillar.k8s_common.log_dir }}
+      name: k8s-audit-log
+    - mountPath: {{ pillar.ca_common.cert_dir }}
+      name: ca-certs
+      readOnly: true
+    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+      name: encryption-config
+      readOnly: true
+    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
+      name: audit-policy
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: {{ pillar.k8s_common.log_dir }}
+      type: Directory
+    name: k8s-audit-log
+  - hostPath:
+      path: {{ pillar.ca_common.cert_dir }}
+      type: Directory
+    name: ca-certs
+  - hostPath:
+      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+      type: File
+    name: encryption-config
+  - hostPath:
+      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
+      type: File
+    name: audit-policy

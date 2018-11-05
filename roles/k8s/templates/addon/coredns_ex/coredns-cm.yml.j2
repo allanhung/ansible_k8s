@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: {{ pillar.k8s_addon.coredns_ex.namespace }}
+data:
+  Corefile: |-
+    .:53 {
+      log . {
+        class denial
+      }
+      cache
+      errors
+      loadbalance round_robin
+      whoami
+      health
+      prometheus 0.0.0.0:9153
+      proxy . {{ pillar.k8s_addon.coredns_ex.upstreams | join(" ") }}
+    }
+
+    {{ pillar.k8s_network.external_dn }} {
+      etcd {{ pillar.k8s_network.external_dn }} {
+        stubzones
+        path /skydns
+        endpoint http://coredns-exetcd:2379
+        upstream {{ pillar.k8s_addon.coredns_ex.upstreams | join(" ") }}
+        debug
+      }
+      errors
+      log
+    }

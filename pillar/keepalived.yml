@@ -1,0 +1,4 @@
+keepalived_common:
+  default:
+    password: d0cker
+    router_id: 51

@@ -1,0 +1,10 @@
+{% if inventory_hostname in (pillar.k8s_host.master)  %}
+KUBELET_KUBECONFIG_ARGS=--kubeconfig={{ pillar.k8s_common.conf_dir }}/kubelet.conf
+{% else %}
+KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig={{ pillar.k8s_common.conf_dir }}/bootstrap-kubelet.conf --kubeconfig={{ pillar.k8s_common.conf_dir }}/kubelet.conf
+{% endif %}
+KUBELET_SYSTEM_ARGS=--network-plugin=cni --cni-conf-dir={{ pillar.cni_common.conf_dir }} --cni-bin-dir={{ pillar.cni_common.bin_dir }}
+KUBELET_CONFIG_ARGS=--config={{ pillar.k8s_comp.kubelet.conf_file }}
+{% if inventory_hostname in (pillar.k8s_host.master)  %}
+KUBELET_EXTRA_ARGS=--node-labels=node-role.kubernetes.io/master=''
+{% endif %}

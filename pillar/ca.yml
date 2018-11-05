@@ -1,0 +1,98 @@
+ca_common:
+  default:
+    key_algorithm: rsa
+    key_size: 2048
+    tmp_dir: /tmp/k8s
+    cert_dir: /etc/kubernetes/ssl
+    expiry: 87600h
+
+tls_bootstrap:
+  default:
+    user: tls-bootstrap-token-user
+    # openssl rand 3 -hex
+    token_id: ccbf9a
+    # openssl rand 8 -hex
+    token_secret: 3d618b11686d2d9b
+
+ca:
+  default:
+    dashboard_ca:
+      Common_Name: dashboardca
+      Organization: dashboard
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    dashboard:
+      Common_Name: dashboard
+      Organization: dashboard
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    etcd_ca:
+      Common_Name: etcdca
+      Organization: etcd
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    etcd:
+      Common_Name: etcd
+      Organization: etcd
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    # https://kubernetes.io/docs/tasks/access-kubernetes-api/configure-aggregation-layer/
+    front_proxy_client_ca:
+      Common_Name: fpcca
+      Organization: Kubernetes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    front_proxy_client:
+      Common_Name: front-proxy-client
+    k8s_ca:
+      Common_Name: k8sca
+      Organization: Kubernetes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    apiserver:
+      Common_Name: kube-apiserver
+      Organization: Kubernetes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    controller_manager:
+      Common_Name: system:kube-controller-manager
+      Organization: system:kube-controller-manager
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    scheduler:
+      Common_Name: system:kube-scheduler
+      Organization: system:kube-scheduler
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    admin:
+      Common_Name: admin
+      Organization: system:masters
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    kubelet:
+      Common_Name: system:node
+      Organization: system:nodes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU

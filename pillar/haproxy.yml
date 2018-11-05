@@ -1,0 +1,7 @@
+haproxy_common:
+  default:
+    conf_dir: /etc/haproxy
+    stats_bind_address: ':9000'
+    stats_uri: /haproxy_stats
+    stats_user: hadmin
+    stats_password: adminha

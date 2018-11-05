@@ -1,0 +1,91 @@
+- name: generate csr setting
+  template:
+    src: ca/csr_{{ item }}.j2
+    dest: /tmp/csr_{{ item }}.json
+  when: inventory_hostname == (pillar.k8s_host.master[0]) and (item != "kubelet")
+  loop: "{{ pillar.ca.keys() }}"
+
+- name: generate csr setting for kubelet
+  template:
+    src: ca/csr_{{ item }}.j2
+    dest: /tmp/csr_{{ item }}_{{ inventory_hostname }}.json
+  when: inventory_hostname in (pillar.k8s_host.master) and (item == "kubelet")
+  delegate_to: "{{ pillar.k8s_host.master[0] }}"
+  loop: "{{ pillar.ca.keys() }}"
+
+- name: generate ca signed config
+  template:
+    src: ca/ca_config.j2
+    dest: /tmp/ca_config.json
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: ensure cert directory is create
+  file:
+    path: "{{ pillar.ca_common.cert_dir }}"
+    state: directory
+    mode: 0755
+
+- name: generate root ca
+  shell: cfssl gencert -initca /tmp/csr_{{ item }}.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/{{ item }}
+  when: inventory_hostname == (pillar.k8s_host.master[0]) and (item in ["k8s_ca", "dashboard_ca", "etcd_ca", "front_proxy_client_ca"])
+  loop: "{{ pillar.ca.keys() }}"
+
+- name: generate dashboard cert
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/dashboard_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/dashboard_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -hostname=*.{{ pillar.k8s_network.external_dn }},*.{{ pillar.k8s_network.internal_dn }} \
+    -profile=kubernetes \
+    /tmp/csr_dashboard.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/dashboard
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate etcd cert
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/etcd_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/etcd_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -hostname=127.0.0.1,{{ pillar.k8s_host.etcd | join(",") }}{% for host in pillar.k8s_host.etcd %},{{ hostvars[host].ansible_default_ipv4.address }}{% endfor %} \
+    -profile=kubernetes \
+    /tmp/csr_etcd.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/etcd
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate front proxy clinet cert
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/front_proxy_client_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/front_proxy_client_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -profile=kubernetes \
+    /tmp/csr_front_proxy_client.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/front_proxy_client
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate apiserver cert
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/k8s_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/k8s_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -hostname=127.0.0.1,{{ pillar.k8s_network.service_cidr | ipaddr('1')| ipaddr('address') }},{{ pillar.k8s_comp.api_server.vip }},{{ pillar.k8s_host.master | join(",") }} \
+    -profile=kubernetes \
+    /tmp/csr_apiserver.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/apiserver
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate cert for kubernetes
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/k8s_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/k8s_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -profile=kubernetes \
+    /tmp/csr_{{ item }}.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/{{ item }}
+  when: inventory_hostname == (pillar.k8s_host.master[0]) and (item not in ["k8s_ca", "dashboard_ca", "etcd_ca", "front_proxy_client_ca", "dashboard", "etcd", "apiserver", "front_proxy_client", "kubelet"])
+  loop: "{{ pillar.ca.keys() }}"
+
+- name: generate kubelet cert for kubernetes
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/k8s_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/k8s_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -profile=kubernetes \
+    -hostname={{ inventory_hostname }} \
+    /tmp/csr_{{ item }}_{{ inventory_hostname }}.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/{{ item }}-{{ inventory_hostname }}
+  delegate_to: "{{ pillar.k8s_host.master[0] }}"
+  when: inventory_hostname in (pillar.k8s_host.master) and (item ==  "kubelet")
+  loop: "{{ pillar.ca.keys() }}"
+
+- name: generate service account key
+  shell: openssl genrsa -out {{ pillar.ca_common.cert_dir }}/sa.key {{ pillar.ca_common.key_size }} && \
+    openssl rsa -in {{ pillar.ca_common.cert_dir }}/sa.key -pubout -out {{ pillar.ca_common.cert_dir }}/sa.pub
+  when: inventory_hostname == (pillar.k8s_host.master[0])

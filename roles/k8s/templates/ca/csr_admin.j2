@@ -1,0 +1,16 @@
+{
+  "CN": "{{ pillar.ca.admin.Common_Name }}",
+  "key": {
+    "algo": "{{ pillar.ca_common.key_algorithm }}",
+    "size": {{ pillar.ca_common.key_size }}
+  },
+  "names": [
+    {
+      "C": "{{ pillar.ca.admin.Country }}",
+      "ST": "{{ pillar.ca.admin.STate }}",
+      "L": "{{ pillar.ca.admin.Locality }}",
+      "O": "{{ pillar.ca.admin.Organization }}",
+      "OU": "{{ pillar.ca.admin.Organization_Unit }}"
+    }
+  ]
+}

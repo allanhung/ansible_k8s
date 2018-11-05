@@ -1,0 +1,31 @@
+global
+  log 127.0.0.1 local0
+  log 127.0.0.1 local1 notice
+  tune.ssl.default-dh-param {{ pillar.ca_common.key_size }}
+
+defaults
+  log global
+  mode http
+  option dontlognull
+  timeout connect 5000ms
+  timeout client 1800000ms
+  timeout server 1800000ms
+
+listen stats
+    bind {{ pillar.haproxy_common.stats_bind_address }}
+    mode http
+    balance
+    stats uri {{ pillar.haproxy_common.stats_uri }}
+    stats auth {{ pillar.haproxy_common.stats_user }}:{{ pillar.haproxy_common.stats_password }}
+    stats admin if TRUE
+
+frontend kube-apiserver-https
+   mode tcp
+   bind :{{ pillar.k8s_comp.api_server.vip_port }}
+   default_backend kube-apiserver-backend
+
+backend kube-apiserver-backend
+    mode tcp
+{% for host in pillar.k8s_host.master %}
+    server {{ host }} {{ hostvars[host].ansible_default_ipv4.address }}:{{ pillar.k8s_comp.api_server.secure_port }} check
+{% endfor %}

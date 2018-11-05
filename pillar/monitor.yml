@@ -1,0 +1,17 @@
+prometheus_operator_repos:
+  default:
+    - name: coreos
+      url: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+
+prometheus_operator_pkgs:
+  default:
+    - repo: coreos
+      name: prometheus-operator
+      namespace: monitor
+    - repo: coreos
+      name: kube-prometheus
+      namespace: monitor
+
+prometheus_operator_files:
+  default:
+    - ingress

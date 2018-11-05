@@ -1,0 +1,71 @@
+---
+- name: stop kubelet engine
+  systemd:
+    name: kubelet
+    state: stopped
+
+- name: stop docker
+  shell: docker stop $(docker ps -aq)
+  ignore_errors: yes
+
+- name: rm docker
+  shell: docker rm $(docker ps -aq)
+  ignore_errors: yes
+
+- name: umount kubenetes mounts
+  shell: umount $(df -HT | grep '/var/lib/kubelet/pods' | awk '{print $7}')
+  ignore_errors: yes
+
+- name: ensure etcd cert directory is removed
+  file:
+    path: "{{ pillar.ca_common.cert_dir }}"
+    state: absent
+
+- name: ensure etcd data directory is removed
+  file:
+    path: "{{ pillar.etcd_common.data_dir }}"
+    state: absent
+
+- name: ensure k8s cert directory is removed
+  file:
+    path: "{{ pillar.ca_common.cert_dir }}"
+    state: absent
+
+- name: ensure etcd directory is removed
+  file:
+    path: "{{ pillar.etcd_common.conf_dir }}"
+    state: absent
+  when: inventory_hostname in (pillar.k8s_host.etcd)
+
+- name: ensure kubelet config directory is removed
+  file:
+    path: "{{ pillar.k8s_comp.kubelet.conf_file | dirname }}"
+    state: absent
+
+- name: ensure haproxy directory is removed
+  file:
+    path: "{{ pillar.haproxy_common.conf_dir }}"
+    state: absent
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes config directory is removed
+  file:
+    path: "{{ pillar.k8s_common.conf_dir }}"
+    state: absent
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes manifest directory is removed
+  file:
+    path: "{{ pillar.k8s_common.manifest_dir }}"
+    state: absent
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: reboot
+  shell: "sleep 3 && shutdown -r now"
+  async: 1
+  poll: 0
+
+- name: wait for system reboot
+  wait_for_connection:
+    delay: 30
+    timeout: 900

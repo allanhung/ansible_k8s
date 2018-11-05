@@ -1,0 +1,73 @@
+---
+- name: ensure etcd config directory is create
+  file:
+    path: "{{ pillar.etcd_common.conf_dir }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.etcd)
+
+- name: ensure haproxy directory is create
+  file:
+    path: "{{ pillar.haproxy_common.conf_dir }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes log directory is create
+  file:
+    path: "{{ pillar.k8s_common.log_dir }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: etcd config
+  template:
+    src: etcd-config.yml.j2
+    dest: "{{ pillar.etcd_common.conf_dir }}/config.yml"
+  when: inventory_hostname in (pillar.k8s_host.etcd)
+
+- name: haproxy config
+  template:
+    src: haproxy.cfg.j2
+    dest: "{{ pillar.haproxy_common.conf_dir }}/haproxy.cfg"
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes encryption config directory is create
+  file:
+    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_common.encryption_config | dirname }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: kubernetes encryption config
+  template:
+    src: encryption_config.yml.j2
+    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}"
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes audit policy directory is create
+  file:
+    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_common.audit_policy | dirname }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: kubernetes audit policy
+  template:
+    src: audit_policy.yml.j2
+    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}"
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: ensure kubernetes manifest directory is create
+  file:
+    path: "{{ pillar.k8s_common.manifest_dir }}"
+    state: directory
+    mode: 0755
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+- name: kubernetes manifest
+  template:
+    src: manifests/{{ item }}.yml.j2
+    dest: "{{ pillar.k8s_common.manifest_dir }}/{{ item }}.yml"
+  when: inventory_hostname in (pillar.k8s_host.master)
+  loop: "{{ pillar.k8s_manifest }}"

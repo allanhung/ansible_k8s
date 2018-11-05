@@ -1,0 +1,4 @@
+---
+- name: run task
+  include_tasks: "{{ item }}.yml"
+  loop: "{{ pillar.k8s_role_tags }}"

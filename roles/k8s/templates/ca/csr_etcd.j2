@@ -1,0 +1,16 @@
+{
+  "CN": "{{ pillar.ca.etcd.Common_Name }}",
+  "key": {
+    "algo": "{{ pillar.ca_common.key_algorithm }}",
+    "size": {{ pillar.ca_common.key_size }}
+  },
+  "names": [
+    {
+      "C": "{{ pillar.ca.etcd.Country }}",
+      "ST": "{{ pillar.ca.etcd.STate }}",
+      "L": "{{ pillar.ca.etcd.Locality }}",
+      "O": "{{ pillar.ca.etcd.Organization }}",
+      "OU": "{{ pillar.ca.etcd.Organization_Unit }}"
+    }
+  ]
+}

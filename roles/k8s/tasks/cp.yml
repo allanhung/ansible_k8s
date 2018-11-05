@@ -1,0 +1,139 @@
+---
+# remove unnecessary files
+- name: remove csr file
+  shell: find {{ pillar.ca_common.cert_dir }} -iname "*.csr" -type f |xargs rm -f
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: remove pem file 
+  shell: find {{ pillar.ca_common.cert_dir }} -iname "{{ item }}*.pem" -type f |xargs rm -f
+  when: inventory_hostname == (pillar.k8s_host.master[0]) and (item not in ["k8s_ca", "etcd_ca", "front_proxy_client_ca", "etcd", "apiserver", "front_proxy_client"])
+  loop: "{{ pillar.ca.keys() }}"
+
+# etcd cert and key
+- name: cert list for etcd
+  shell: find {{ pillar.ca_common.cert_dir }} -iname "etcd*.pem" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch etcd cert
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put etcd cert
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and inventory_hostname in (pillar.k8s_host.etcd)
+  loop: "{{ hostvars[pillar.k8s_host.etcd[0]]['fetch_list']['stdout_lines'] }}"
+
+# k8s root cert
+- name: k8s root ca cert
+  shell: find {{ pillar.ca_common.cert_dir }} -iname "k8s_ca.pem" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch k8s root ca cert
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put k8s root ca cert
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and (inventory_hostname in (pillar.k8s_host.master) or inventory_hostname in (pillar.k8s_host.node))
+  loop: "{{ hostvars[pillar.k8s_host.master[0]]['fetch_list']['stdout_lines'] }}"
+
+# k8s cert and key
+- name: cert list for k8s
+  shell: find {{ pillar.ca_common.cert_dir }} -iname "*.pem" ! -iname "etcd*.pem" ! -iname "k8s_ca.pem" -o -iname "sa.*" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch k8s cert
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put k8s cert
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and inventory_hostname in (pillar.k8s_host.master)
+  loop: "{{ hostvars[pillar.k8s_host.master[0]]['fetch_list']['stdout_lines'] }}"
+
+# kubelet config
+- name: k8s kubelet conf
+  shell: find {{ pillar.k8s_common.conf_dir }} -iname "kubelet-*.conf" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch k8s kubelet conf
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put k8s kubelet config
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and inventory_hostname in (pillar.k8s_host.master)
+  loop: "{{ hostvars[pillar.k8s_host.master[0]]['fetch_list']['stdout_lines'] }}"
+
+- name: rename kubelet config
+  shell: /bin/mv -f {{ pillar.k8s_common.conf_dir }}/kubelet-{{ inventory_hostname }}.conf {{ pillar.k8s_common.conf_dir }}/kubelet.conf
+  when: inventory_hostname in (pillar.k8s_host.master)
+  ignore_errors: yes
+
+- name: remove kubelet config with hostname
+  shell: find {{ pillar.k8s_common.conf_dir }} -iname "kubelet-*.conf" -type f |xargs rm -f
+  when: inventory_hostname in (pillar.k8s_host.master)
+
+# kubelet bootstrap config for master and node
+- name: k8s kubelet bootstrap conf
+  shell: find {{ pillar.k8s_common.conf_dir }} -iname "bootstrap-kubelet.conf" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch k8s kubelet bootstrap conf
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put k8s kubelet bootstrap config
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and (inventory_hostname in (pillar.k8s_host.master) or inventory_hostname in (pillar.k8s_host.node))
+  loop: "{{ hostvars[pillar.k8s_host.master[0]]['fetch_list']['stdout_lines'] }}"
+
+# k8s config
+- name: conf list for k8s
+  shell: find {{ pillar.k8s_common.conf_dir }} -iname "*.conf" ! -iname "*kubelet*.conf" -type f 
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  register: fetch_list
+
+- name: fetch k8s conf
+  fetch:
+    src: "{{ item }}"
+    dest: /tmp
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+  loop: "{{ fetch_list.stdout_lines }}"
+
+- name: put k8s config
+  copy:
+    src: /tmp/{{ pillar.k8s_host.master[0] }}/{{ item }}
+    dest: "{{ item }}"
+  when: inventory_hostname != (pillar.k8s_host.master[0]) and inventory_hostname in (pillar.k8s_host.master)
+  loop: "{{ hostvars[pillar.k8s_host.master[0]]['fetch_list']['stdout_lines'] }}"

@@ -1,0 +1,30 @@
+---
+- name: ensure /tmp/helm directory is create
+  file:
+    path: /tmp/helm
+    state: directory
+    mode: 0755
+  when: inventory_hostname in pillar.k8s_host.master
+
+- name: Download and unarchive helmn
+  unarchive:
+    src: "{{ pillar.helm_pkgs.url }}"
+    dest: /tmp/helm
+    remote_src: yes
+  when: inventory_hostname in pillar.k8s_host.master
+
+- name: move to bin directory
+  shell: find /tmp/helm -name "helm" -type f | xargs -i /bin/mv -f {} {{ pillar.helm_pkgs.bin_dir }} && chmod 755 {{ pillar.helm_pkgs.bin_dir }}/helm
+  when: inventory_hostname in pillar.k8s_host.master
+
+- name: create service account for helm
+  shell: kubectl --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf -n {{ pillar.helm_user.namespace }} create sa {{ pillar.helm_user.name }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+
+- name: bind role to helm service account
+  shell: kubectl --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf create clusterrolebinding {{ pillar.helm_user.name }} --clusterrole {{ pillar.helm_user.role }} --serviceaccount={{ pillar.helm_user.namespace }}:{{ pillar.helm_user.name }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+
+- name: init helm
+  shell: helm init --service-account {{ pillar.helm_user.name }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])

@@ -1,0 +1,16 @@
+{
+  "CN": "{{ pillar.ca.k8s_ca.Common_Name }}",
+  "key": {
+    "algo": "{{ pillar.ca_common.key_algorithm }}",
+    "size": {{ pillar.ca_common.key_size }}
+  },
+  "names": [
+    {
+      "C": "{{ pillar.ca.k8s_ca.Country }}",
+      "ST": "{{ pillar.ca.k8s_ca.STate }}",
+      "L": "{{ pillar.ca.k8s_ca.Locality }}",
+      "O": "{{ pillar.ca.k8s_ca.Organization }}",
+      "OU": "{{ pillar.ca.k8s_ca.Organization_Unit }}"
+    }
+  ]
+}

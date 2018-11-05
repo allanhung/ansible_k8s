@@ -1,0 +1,29 @@
+---
+- name: add docker repo
+  shell: "yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo"
+
+- name: install docker-ce
+  yum: "name=docker-ce state=present"
+
+- name: add env to service unit
+  lineinfile:
+    path: /usr/lib/systemd/system/docker.service
+    insertafter: '^Type=notify'
+    regexp: "EnvironmentFile=-/etc/sysconfig/docker"
+    line: "EnvironmentFile=-/etc/sysconfig/docker"
+  notify: systemd daemon-reload
+
+- name: set docker envirnment file
+  template:
+    src: docker.j2
+    dest: /etc/sysconfig/docker
+    owner: root
+    group: root
+    mode: 0644
+  when: pillar.docker_env is defined and (pillar.docker_env|length) > 0
+  notify: restart docker
+      
+- name: start docker
+  systemd:
+    name: docker
+    state: started
