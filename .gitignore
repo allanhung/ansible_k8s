@@ -1,2 +1,4 @@
 ara.log
 inventory/*
+*.retry
+*.swp
