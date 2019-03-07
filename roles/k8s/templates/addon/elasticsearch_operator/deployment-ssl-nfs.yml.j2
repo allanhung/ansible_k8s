@@ -1,0 +1,35 @@
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  name: {{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}
+  namespace: logging
+spec:
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.1.3
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0
+  use-ssl: true
+  keep-secrets-on-delete: false
+  client-node-replicas: 3
+  master-node-replicas: 2
+  data-node-replicas: 3
+  network-host: 0.0.0.0
+  zones: []
+  data-volume-size: 10Gi
+  java-options: "-Xms512m -Xmx512m"
+  snapshot:
+    scheduler-enabled: false
+    bucket-name: elasticsnapshots99
+    cron-schedule: "@every 2m"
+    image: upmcenterprises/elasticsearch-cron:0.0.4
+  storage:
+    storage-class: {{ pillar.k8s_pv.nfs.storage_class }}
+    storage-class-provisioner: {{ pillar.k8s_pv.nfs.provisioner_name }}
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 1024Mi
+      cpu: '1'

@@ -4,7 +4,7 @@ Documentation=http://kubernetes.io/docs/
 
 [Service]
 EnvironmentFile=-/etc/sysconfig/kubelet
-ExecStart={{ pillar.k8s_common.bin_dir }}/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_SYSTEM_ARGS $KUBELET_EXTRA_ARGS $CRI_RUNTIME_ARGS
+ExecStart={{ pillar.k8s_pkgs_common.bin_dir }}/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_SYSTEM_ARGS $KUBELET_EXTRA_ARGS $CRI_RUNTIME_ARGS
 Restart=on-failure
 StartLimitBurst=3
 StartLimitInterval=60s

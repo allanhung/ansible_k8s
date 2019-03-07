@@ -4,18 +4,17 @@ metadata:
   name: ingress-nginx
   namespace: ingress-nginx
   labels:
-    app: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
 spec:
   type: LoadBalancer
-  externalIPs:
-  - {{ pillar.k8s_network.ingress_vip }}
   ports:
-  - port: 80
-    targetPort: 80
-    name: http
-  - port: 80
-    targetPort: 80
-    name: https
+  - name: http
+    port: 80
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
   selector:
     app: ingress-nginx
 ---

@@ -1,16 +1,16 @@
 {
-  "CN": "{{ pillar.ca.front_proxy_client_ca.Common_Name }}",
+  "CN": "{{ pillar.rootca.front_proxy_client_ca.Common_Name }}",
   "key": {
     "algo": "{{ pillar.ca_common.key_algorithm }}",
     "size": {{ pillar.ca_common.key_size }}
   },
   "names": [
     {
-      "C": "{{ pillar.ca.front_proxy_client_ca.Country }}",
-      "ST": "{{ pillar.ca.front_proxy_client_ca.STate }}",
-      "L": "{{ pillar.ca.front_proxy_client_ca.Locality }}",
-      "O": "{{ pillar.ca.front_proxy_client_ca.Organization }}",
-      "OU": "{{ pillar.ca.front_proxy_client_ca.Organization_Unit }}"
+      "C": "{{ pillar.rootca.front_proxy_client_ca.Country }}",
+      "ST": "{{ pillar.rootca.front_proxy_client_ca.STate }}",
+      "L": "{{ pillar.rootca.front_proxy_client_ca.Locality }}",
+      "O": "{{ pillar.rootca.front_proxy_client_ca.Organization }}",
+      "OU": "{{ pillar.rootca.front_proxy_client_ca.Organization_Unit }}"
     }
   ]
 }

@@ -13,12 +13,12 @@ spec:
   priorityClassName: system-cluster-critical
   containers:
   - name: kube-controller-manager
-    image: k8s.gcr.io/kube-controller-manager-amd64:v{{ pillar.k8s_common.version }}
+    image: k8s.gcr.io/kube-controller-manager-amd64:v{{ pillar.k8s_pkgs_common.version }}
     command:
       - kube-controller-manager
       - --v={{ pillar.k8s_comp.controller_manager.log_level }}
       - --logtostderr=true
-      - --address=127.0.0.1
+      - --address=0.0.0.0
       - --root-ca-file={{ pillar.ca_common.cert_dir }}/k8s_ca.pem
       - --cluster-signing-cert-file={{ pillar.ca_common.cert_dir }}/k8s_ca.pem
       - --cluster-signing-key-file={{ pillar.ca_common.cert_dir }}/k8s_ca-key.pem
@@ -31,7 +31,7 @@ spec:
       - --pod-eviction-timeout=2m0s
       - --controllers=*,bootstrapsigner,tokencleaner
       - --allocate-node-cidrs=true
-      - --cluster-cidr={{ pillar.k8s_network.cluster_cidr }}
+      - --cluster-cidr={{ pillar.k8s_env.pod_cidr }}
       {% if pillar.k8s_comp.controller_manager.feature_gates != '' -%}
       - --feature-gates={{ pillar.k8s_comp.controller_manager.feature_gates }}
       {% endif -%}

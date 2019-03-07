@@ -14,17 +14,10 @@ tls_bootstrap:
     # openssl rand 8 -hex
     token_secret: 3d618b11686d2d9b
 
-ca:
+rootca:
   default:
     dashboard_ca:
       Common_Name: dashboardca
-      Organization: dashboard
-      Country: TW
-      STate: Taiwan
-      Locality: Taipei
-      Organization_Unit: OU
-    dashboard:
-      Common_Name: dashboard
       Organization: dashboard
       Country: TW
       STate: Taiwan
@@ -37,6 +30,30 @@ ca:
       STate: Taiwan
       Locality: Taipei
       Organization_Unit: OU
+    front_proxy_client_ca:
+      Common_Name: fpcca
+      Organization: Kubernetes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+    k8s_ca:
+      Common_Name: k8sca
+      Organization: Kubernetes
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
+
+ca:
+  default:
+    dashboard:
+      Common_Name: dashboard
+      Organization: dashboard
+      Country: TW
+      STate: Taiwan
+      Locality: Taipei
+      Organization_Unit: OU
     etcd:
       Common_Name: etcd
       Organization: etcd
@@ -45,22 +62,8 @@ ca:
       Locality: Taipei
       Organization_Unit: OU
     # https://kubernetes.io/docs/tasks/access-kubernetes-api/configure-aggregation-layer/
-    front_proxy_client_ca:
-      Common_Name: fpcca
-      Organization: Kubernetes
-      Country: TW
-      STate: Taiwan
-      Locality: Taipei
-      Organization_Unit: OU
     front_proxy_client:
       Common_Name: front-proxy-client
-    k8s_ca:
-      Common_Name: k8sca
-      Organization: Kubernetes
-      Country: TW
-      STate: Taiwan
-      Locality: Taipei
-      Organization_Unit: OU
     apiserver:
       Common_Name: kube-apiserver
       Organization: Kubernetes

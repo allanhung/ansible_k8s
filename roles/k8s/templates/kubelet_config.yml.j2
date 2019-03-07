@@ -7,8 +7,8 @@ healthzBindAddress: {{ pillar.k8s_comp.kubelet.bind_healthz_address }}
 healthzPort: {{ pillar.k8s_comp.kubelet.bind_healthz_port }}
 staticPodPath: {{ pillar.k8s_common.manifest_dir }}
 clusterDNS:
-- {{ pillar.k8s_network.dns_ip }}
-clusterDomain: {{ pillar.k8s_network.internal_dn }}
+- {{ pillar.k8s_env.dns_service_ip }}
+clusterDomain: {{ pillar.k8s_env.internal_dn }}
 {% if pillar.k8s_comp.kubelet.feature_gates -%}
 featureGates:
 {% for k,v in pillar.k8s_comp.kubelet.feature_gates.items() %}

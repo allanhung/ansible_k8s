@@ -4,15 +4,11 @@ metadata:
   name: k8s-dashboard
   namespace: kube-system
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/secure-backends: "true"
-
+    nginx.ingress.kubernetes.io/backend-protocol: "https"
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
 spec:
-  tls:
-  - secretName: k8s-dashboard-secret
   rules:
-  - host: dashboard.{{ pillar.k8s_network.external_dn }}
+  - host: dashboard.{{ pillar.k8s_env.external_dn }}
     http:
       paths:
       - backend:

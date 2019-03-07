@@ -1,0 +1,29 @@
+- name: check if apiserver ready
+  wait_for:
+    host: "{{ pillar.k8s_env.master_vip }}"
+    port: "{{ pillar.k8s_comp.api_server.vip_port }}"
+    state: started         # Port should be open
+    delay: 10              # No wait before first check (sec)
+    timeout: 60            # Stop checking after timeout (sec)
+
+- name: tls token for kubelet bootstrap config
+  template:
+    src: rbac/tls_token.yml.j2
+    dest: /tmp/rbac_tls_token.yml
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+
+- name: create tls token for kubelet bootstrap
+  shell: kubectl apply --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf -f /tmp/rbac_tls_token.yml
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+
+- name: copy rbac config
+  copy:
+    src: rbac/{{ item }}.yml
+    dest: /tmp/rbac_{{ item }}.yml
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+  loop: "{{ pillar.k8s_rbac }}"
+
+- name: apply rbac
+  shell: kubectl apply --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf -f /tmp/rbac_{{ item }}.yml
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+  loop: "{{ pillar.k8s_rbac }}"

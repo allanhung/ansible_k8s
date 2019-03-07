@@ -93,7 +93,7 @@ spec:
   # We recommend using Typha if you have more than 50 nodes.  Above 100 nodes it is essential
   # (when using the Kubernetes datastore).  Use one replica for every 100-200 nodes.  In
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
-  replicas: 3
+  replicas: 1
   revisionHistoryLimit: 2
   template:
     metadata:
@@ -246,7 +246,7 @@ spec:
               value: "autodetect"
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
-              value: "Always"
+              value: "{{ pillar.k8s_network_addon.calico_typha.ipip_enable }}"
             # Enable IP-in-IP within Felix.
             - name: FELIX_IPINIPENABLED
               value: "true"
@@ -260,7 +260,7 @@ spec:
             # chosen from this range. Changing this value after installation will have
             # no effect. This should fall within `--cluster-cidr`.
             - name: CALICO_IPV4POOL_CIDR
-              value: "{{ pillar.k8s_network.cluster_cidr }}"
+              value: "{{ pillar.k8s_env.pod_cidr }}"
             # Disable file logging so `kubectl logs` works.
             - name: CALICO_DISABLE_FILE_LOGGING
               value: "true"

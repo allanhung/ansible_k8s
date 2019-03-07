@@ -1,62 +1,34 @@
 k8s_common:
   default:
-    audit_log: audit.log
-    audit_policy: audit/policy.yml
-    bin_dir: "/usr/local/bin"
     conf_dir: /etc/kubernetes
     container_socket: /var/run/docker.sock
-    encryption_config: encryption/config.yml
-    # openssl rand -hex 16
-    encryption_token: ae6ae5ee4f60c1790b5df6c00b009d33
     log_dir: /var/log/kubernetes
     manifest_dir: /etc/kubernetes/manifests
-    url: https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64
-    version: 1.12.1 
 
-k8s_pkgs:
-  default:
-    kubelet:
-      dest: kubelet
-      checksum: md5:54b8a760dd830dd156b89fae6240d1f4
-    kubectl:
-      dest: kubectl
-      checksum: md5:12a5e9b9da038bff6992055960b42a67
-
-k8s_network:
-  default:
-    cluster_cidr: 172.20.0.0/16
-    service_cidr: 172.21.0.0/16
-    service_port_range: 30000-32767
-    ingress_vip: 10.41.239.52
-    dns_ex_vip: 10.41.239.52
-    dns_ip: 172.21.0.10
-    internal_dn: cluster.local
-    external_dn: k8s.local
-
-k8s_network_addon:
-  default:
-    calico_typha:
-      config_files:
-        - rbac-kdd
-        - calico
-        - calicoctl
-    
 k8s_comp:
   default:
     api_server:
+      audit_log: audit.log
+      audit_policy: audit/policy.yml
       authorization_mode: "Node,RBAC"
       bind_address: 0.0.0.0
       disable_admission: "PersistentVolumeLabel"
       enable_admission: "NodeRestriction"
+      encryption_config: encryption/config.yml
+      # openssl rand -hex 16
+      encryption_token: ae6ae5ee4f60c1790b5df6c00b009d33
       feature_gates: "PodPriority=true"
       insecure_port: 0
       log_level: 0
       secure_port: 6443 
-      vip: 10.41.239.51
+      service_port_range: 30000-32767
       vip_port: 8443 
     controller_manager:
       log_level: 0
       feature_gates: "PodPriority=true"
+      config_files: 
+        - endpoint
+        - svc
     kubelet:
       bind_address: 0.0.0.0
       bind_port: 10250
@@ -66,9 +38,14 @@ k8s_comp:
       conf_file: /var/lib/kubelet/config.yml
       feature_gates:
         PodPriority: true
+      config_files: 
+        - endpoint
     scheduler:
       log_level: 0
       feature_gates: "PodPriority=true"
+      config_files: 
+        - endpoint
+        - svc
 
 k8s_rbac:
   default:
@@ -84,14 +61,15 @@ k8s_manifest:
     - kube-controller-manager
     - kube-scheduler
 
-k8s_addon:
+k8s_addon1:
   default:
     kubeproxy:
       bind_address: 0.0.0.0
       healthz_bind_address: 0.0.0.0:10256
       ipvs_scheduler: rr
       metrics_bind_address: 127.0.0.1:10249
-      mode: ipvs
+      mode: iptables
+      # mode: ipvs
       syncPeriod: 30s
       config_files:
         - cm
@@ -99,16 +77,12 @@ k8s_addon:
         - rbac
         - ds
     # https://github.com/coredns/deployment/tree/master/kubernetes
+    # deploy.sh -s -i dns_service_ip
     coredns:
       config_files:
-        - cm
-        - sa
-        - rbac
-        - dp
-        - svc
-      upstreams:
-        - 10.40.46.51
-        - 10.40.46.52
+        - coredns
+    # exposing TCP and UDP services in nginx-ingress
+    # create loadblance instead of ingress tcp, udp service
     coredns_ex:
       namespace: external-dns
       config_files:
@@ -121,28 +95,30 @@ k8s_addon:
         - external-dns-sa
         - external-dns-rbac
         - external-dns-dp
-      upstreams:
-        - 10.40.46.51
-        - 10.40.46.52
+    # https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard
     dashboard:
       secerts: k8s-dashboard-secret
       config_files:
-        # https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
         - kubernetes-dashboard
         # https://github.com/kubernetes/dashboard/wiki/Creating-sample-user
         - sa
         - rbac
         - ingress
+    # https://raw.githubusercontent.com/google/metallb/v0.7.3/manifests/metallb
+    metallb:
+      config_files:
+        - metallb
+        - cm
+    # https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8+
+    # https://github.com/kubernetes-incubator/metrics-server/issues/146
+    # insecure tls
+    # - name: metrics-server
+    #   image: k8s.gcr.io/metrics-server-amd64:v0.3.1
+    #   command:
+    #   - /metrics-server
+    #   - --kubelet-insecure-tls
     metrics_server:
       config_files:
-        # https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8+
-        # https://github.com/kubernetes-incubator/metrics-server/issues/146
-        # insecure tls
-        # - name: metrics-server
-        #   image: k8s.gcr.io/metrics-server-amd64:v0.3.1
-        #   command:
-        #   - /metrics-server
-        #   - --kubelet-insecure-tls
         - metrics-server-deployment
         - metrics-apiservice
         - metrics-server-service
@@ -150,14 +126,163 @@ k8s_addon:
         - auth-delegator
         - auth-reader
         - resource-reader
-    ingress_nginx:
+    # https://github.com/coreos/prometheus-operator.git
+    # https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus/manifests
+    prometheus_operator:
+      config_files:
+        # namespace
+        - 00namespace-namespace
+        # operator
+        - 0prometheus-operator-0alertmanagerCustomResourceDefinition
+        - 0prometheus-operator-0prometheusCustomResourceDefinition
+        - 0prometheus-operator-0prometheusruleCustomResourceDefinition
+        - 0prometheus-operator-0servicemonitorCustomResourceDefinition
+        - 0prometheus-operator-clusterRoleBinding
+        - 0prometheus-operator-clusterRole
+        - 0prometheus-operator-deployment
+        - 0prometheus-operator-serviceAccount
+        - 0prometheus-operator-serviceMonitor
+        - 0prometheus-operator-service
+        # prometheus-adapter
+        - prometheus-adapter-apiService
+        - prometheus-adapter-clusterRoleBindingDelegator
+        - prometheus-adapter-clusterRoleBinding
+        - prometheus-adapter-clusterRoleServerResources
+        - prometheus-adapter-clusterRole
+        - prometheus-adapter-configMap
+        - prometheus-adapter-deployment
+        - prometheus-adapter-roleBindingAuthReader
+        - prometheus-adapter-serviceAccount
+        - prometheus-adapter-service
+        # alertmanager
+        - alertmanager-alertmanager
+        - alertmanager-secret
+        - alertmanager-serviceAccount
+        - alertmanager-serviceMonitor
+        - alertmanager-service
+        # node-exporter
+        - node-exporter-clusterRoleBinding
+        - node-exporter-clusterRole
+        # sed -i -e "/--tls-cipher-suites=/d" node-exporter-daemonset.yaml
+        - node-exporter-daemonset
+        - node-exporter-serviceAccount
+        - node-exporter-serviceMonitor
+        - node-exporter-service
+        # kube-state-metrics
+        - kube-state-metrics-clusterRoleBinding
+        - kube-state-metrics-clusterRole
+        # sed -i -e "/--tls-cipher-suites=/d" kube-state-metrics-deployment.yaml
+        - kube-state-metrics-deployment
+        - kube-state-metrics-roleBinding
+        - kube-state-metrics-role
+        - kube-state-metrics-serviceAccount
+        - kube-state-metrics-serviceMonitor
+        - kube-state-metrics-service
+        # grafana
+        - grafana-dashboardDatasources
+        # sed -i '1i{% raw %}' grafana-dashboardDefinitions.yml.j2
+        # echo '{% endraw %}' >> grafana-dashboardDefinitions.yml.j2
+        - grafana-dashboardDefinitions
+        - grafana-dashboardSources
+        - grafana-deployment
+        - grafana-serviceAccount
+        - grafana-serviceMonitor
+        - grafana-service
+        # prometheus
+        - prometheus-clusterRoleBinding
+        - prometheus-clusterRole
+        - prometheus-prometheus
+        - prometheus-roleBindingConfig
+        - prometheus-roleBindingSpecificNamespaces
+        - prometheus-roleConfig
+        - prometheus-roleSpecificNamespaces
+        # sed -i '1i{% raw %}' prometheus-rules.yml.j2
+        # echo '{% endraw %}' >> prometheus-rules.yml.j2
+        - prometheus-rules
+        - prometheus-serviceAccount
+        - prometheus-service
+        # serviceMonitor
+        - prometheus-serviceMonitorApiserver
+        - prometheus-serviceMonitorCoreDNS
+        - prometheus-serviceMonitorKubeControllerManager
+        - prometheus-serviceMonitorKubelet
+        - prometheus-serviceMonitorKubeScheduler
+        - prometheus-serviceMonitor
+        - ingress
+    # https://github.com/upmc-enterprises/elasticsearch-operator
+    elasticsearch_operator:
+      cluster_name: k8s-logging
+      log_keep_days: 2
       config_files:
         - ns
-        - cm
-        - sa
-        - rbac
-        - dp
-        - svc
+        # sed -i -e 's/namespace: operator/namespace: logging/g' controller.yml.j2
+        - controller
+        # example-es-cluster.yaml
+        - deployment-nfs
+        - ingress
+        # https://github.com/pires/kubernetes-elasticsearch-cluster
+        - es-curator-config
+        - es-curator
+    # https://github.com/fluent/fluent-bit-kubernetes-logging
+    fluent_bit:
+      config_files:
+        - fluent-bit-service-account
+        - fluent-bit-role
+        - fluent-bit-role-binding
+        # https://github.com/fluent/fluent-bit-kubernetes-logging/output/elasticsearch
+        - fluent-bit-configmap
+        - fluent-bit-ds
+    # https://github.com/kubernetes/ingress-nginx
+    # https://github.com/kubernetes/ingress-nginx/pull/3196
+    # Remove default backend requirement
+    # https://github.com/kubernetes/ingress-nginx/blob/master/deploy/provider
+
+k8s_addon:
+  default:
+    ingress_nginx:
+      # https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/exposing-tcp-udp-services.md
+      tcp_services: {}
+#        53: external-dns/coredns-tcp:53
+#        9092: kafka/my-cluster-kafka-brokers:9092 
+      udp_services: {}
+#        53: external-dns/coredns-udp:53
+      config_files:
+        - mandatory
+        - cloud-generic
+        - configmap
+
+k8s_extra_addon:
+  default:
+    minio:
+      namespace: minio
+      version: RELEASE.2019-01-23T23-18-58Z
+      # echo -n 'w6I8Uv1kqlF5n6xk2y3G' | base64
+      # echo 'dzZJOFV2MWtxbEY1bjZ4azJ5M0c=' | base64 --decode
+      access_key: dzZJOFV2MWtxbEY1bjZ4azJ5M0c=
+      # echo -n 'dzZJOFV2MWtxbEY1bjZ4azJ5M0c=' | base64
+      # echo 'ZHpaSk9GVjJNV3R4YkVZMWJqWjRheko1TTBjPQ==' | base64 --decode
+      secret_key: ZHpaSk9GVjJNV3R4YkVZMWJqWjRheko1TTBjPQ==
+      # https://github.com/minio/minio-operator/tree/master/docs
+      config_files:
+        - minio-namespace
+        # add permission to storage
+        - minio-operator
+        - minio-secret
+        - minioinstance-nfs
+        - ingress
+    kafka:
+      cluster_name: my-cluster
+      # Exposing TCP services in ingress-nginx
+      # create loadblance instead of ingress tcp, udp service
+      namespace: kafka
+      # https://github.com/strimzi/strimzi-kafka-operator/releases
+      # https://github.com/strimzi/strimzi-kafka-operator/blob/master/examples/kafka/kafka-persistent.yaml
+      # https://github.com/strimzi/strimzi-kafka-operator/blob/master/documentation/book/ref-storage-persistent.adoc
+      config_files:
+        - namespace
+        - strimzi-cluster-operator-0.9.0
+        - kafka-persistent
+        - lb
 
 k8s_app:
   default:

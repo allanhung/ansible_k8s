@@ -1,16 +1,16 @@
 {
-  "CN": "{{ pillar.ca.etcd_ca.Common_Name }}",
+  "CN": "{{ pillar.rootca.etcd_ca.Common_Name }}",
   "key": {
     "algo": "{{ pillar.ca_common.key_algorithm }}",
     "size": {{ pillar.ca_common.key_size }}
   },
   "names": [
     {
-      "C": "{{ pillar.ca.etcd_ca.Country }}",
-      "ST": "{{ pillar.ca.etcd_ca.STate }}",
-      "L": "{{ pillar.ca.etcd_ca.Locality }}",
-      "O": "{{ pillar.ca.etcd_ca.Organization }}",
-      "OU": "{{ pillar.ca.etcd_ca.Organization_Unit }}"
+      "C": "{{ pillar.rootca.etcd_ca.Country }}",
+      "ST": "{{ pillar.rootca.etcd_ca.STate }}",
+      "L": "{{ pillar.rootca.etcd_ca.Locality }}",
+      "O": "{{ pillar.rootca.etcd_ca.Organization }}",
+      "OU": "{{ pillar.rootca.etcd_ca.Organization_Unit }}"
     }
   ]
 }

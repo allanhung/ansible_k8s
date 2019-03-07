@@ -1,0 +1,11 @@
+---
+- name: add helm repo
+  shell: helm repo add {{ item.name }} {{ item.url }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+  loop: "{{ pillar.monocular_repos }}"
+
+- name: apply monocular from helm
+  shell: helm install {{ item.repo }}/{{ item.name }} --name {{ item.name }} --namespace {{ item.namespace }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+  loop: "{{ pillar.monocular_pkgs }}" 
+  ignore_errors: yes

@@ -3,6 +3,7 @@
   systemd:
     name: kubelet
     state: stopped
+  ignore_errors: yes
 
 - name: stop docker
   shell: docker stop $(docker ps -aq)

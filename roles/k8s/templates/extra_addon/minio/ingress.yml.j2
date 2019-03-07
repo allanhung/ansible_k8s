@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: {{ pillar.k8s_extra_addon.minio.namespace }}
+spec:
+  rules:
+  - host: minio.k8s.local
+    http:
+      paths:
+      - backend:
+          serviceName: minio
+          servicePort: 9000

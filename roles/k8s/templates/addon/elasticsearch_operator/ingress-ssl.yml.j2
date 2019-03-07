@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kibana-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}-ingress
+  namespace: logging
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "https"
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
+spec:
+  rules:
+  - host: kibana-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}.k8s.local
+    http:
+      paths:
+      - backend:
+          serviceName: kibana-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}
+          servicePort: 80
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cerebro-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}-ingress
+  namespace: logging
+spec:
+  rules:
+  - host: cerebro-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}.k8s.local
+    http:
+      paths:
+      - backend:
+          serviceName: cerebro-{{ pillar.k8s_addon.elasticsearch_operator.cluster_name }}
+          servicePort: 80

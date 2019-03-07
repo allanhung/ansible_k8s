@@ -7,8 +7,6 @@ metadata:
   namespace: {{ pillar.k8s_addon.coredns_ex.namespace }}
 spec:
   type: LoadBalancer
-  externalIPs:
-  - {{ pillar.k8s_network.dns_ex_vip }}
   ports:
   - name: dns-tcp
     port: 53
@@ -30,8 +28,6 @@ metadata:
   namespace: {{ pillar.k8s_addon.coredns_ex.namespace }}
 spec:
   type: LoadBalancer
-  externalIPs:
-  - {{ pillar.k8s_network.dns_ex_vip }}
   ports:
   - name: dns
     port: 53

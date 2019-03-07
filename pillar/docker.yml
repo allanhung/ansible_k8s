@@ -1,0 +1,6 @@
+dockerd:
+  default:
+    log:
+      driver: json-file
+      max_size: 10m
+      max_file: 3

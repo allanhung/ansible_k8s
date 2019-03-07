@@ -1,0 +1,18 @@
+---
+- name: apply cert manager from helm
+  shell: helm install {{ item.repo }}/{{ item.name }} --name {{ item.name }} --namespace {{ item.namespace }}
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+  loop: "{{ pillar.cert_manager_pkgs }}" 
+  ignore_errors: yes
+
+- name: add cert manager config files
+  template:
+    src: cert-manager/{{ item.key }}.yml.j2
+    dest: /tmp/cert-manager_{{ item.key }}.yml
+  with_dict: "{{ pillar.cert_issuer_config }}"
+  when: inventory_hostname in (pillar.k8s_host.master[0])
+
+- name: apply cert manager config files
+  shell: kubectl --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf apply -f /tmp/cert-manager_{{ item.key }}.yml
+  with_dict: "{{ pillar.cert_issuer_config }}"
+  when: inventory_hostname in (pillar.k8s_host.master[0])

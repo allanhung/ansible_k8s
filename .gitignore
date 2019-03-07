@@ -2,3 +2,6 @@ ara.log
 inventory/*
 *.retry
 *.swp
+pillar/tmp.yml
+roles/k8s/tasks/tmp.yml
+roles/k8s/tasks/test.yml

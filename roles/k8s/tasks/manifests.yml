@@ -34,7 +34,7 @@
 
 - name: ensure kubernetes encryption config directory is create
   file:
-    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_common.encryption_config | dirname }}"
+    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_comp.api_server.encryption_config | dirname }}"
     state: directory
     mode: 0755
   when: inventory_hostname in (pillar.k8s_host.master)
@@ -42,12 +42,12 @@
 - name: kubernetes encryption config
   template:
     src: encryption_config.yml.j2
-    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}"
+    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.encryption_config }}"
   when: inventory_hostname in (pillar.k8s_host.master)
 
 - name: ensure kubernetes audit policy directory is create
   file:
-    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_common.audit_policy | dirname }}"
+    path: "{{ pillar.k8s_common.conf_dir+'/'+pillar.k8s_comp.api_server.audit_policy | dirname }}"
     state: directory
     mode: 0755
   when: inventory_hostname in (pillar.k8s_host.master)
@@ -55,7 +55,7 @@
 - name: kubernetes audit policy
   template:
     src: audit_policy.yml.j2
-    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}"
+    dest: "{{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.audit_policy }}"
   when: inventory_hostname in (pillar.k8s_host.master)
 
 - name: ensure kubernetes manifest directory is create

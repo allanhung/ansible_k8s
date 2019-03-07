@@ -1,0 +1,37 @@
+k8s_pkgs_common:
+  default:
+    bin_dir: "/usr/local/bin"
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64
+    version: 1.13.4
+
+k8s_pkgs:
+  default:
+    kubelet:
+      dest: kubelet
+      # https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubelet.md5
+      checksum: md5:46607d37fb9e46bdf1d7b12a18c76b92
+    kubectl:
+      dest: kubectl
+      # https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl.md5
+      checksum: md5:380d4779824759a2a5bb3542c916b1df
+
+cfssl_common:
+  default:
+    bin_dir: "/usr/local/bin"
+    url: https://pkg.cfssl.org/R1.2
+
+cfssl_pkgs:
+  default:
+    cfssl_linux-amd64:
+      dest: cfssl
+      checksum: sha256:eb34ab2179e0b67c29fd55f52422a94fe751527b06a403a79325fed7cf0145bd
+    cfssljson_linux-amd64:
+      dest: cfssljson
+      checksum: sha256:1c9e628c3b86c3f2f8af56415d474c9ed4c8f9246630bd21c3418dbe5bf6401e
+
+cni_common:
+  default:
+    url: https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz
+# The directory where CFSSL binaries will be installed
+    bin_dir: "/opt/cni/bin"
+    conf_dir: "/etc/cni/net.d"

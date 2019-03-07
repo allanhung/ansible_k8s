@@ -2,19 +2,28 @@ k8s_role_tags:
   example:
     - reset
     - prepare
+    - bin
     - ca
-    - config
-    - cp
+    - kubeconfig
+    - deploy_ca
     - manifests
     - kubelet
-    - rbac
-    - network_addon
-    - addon
-    - app
+    - tlsbootstrap
+    - comp_config
+    - comp_create
+    - network
+    - addon_config
+    - addon_create
+    - app_config
+    - app_create
+    - extra_addon_config
+    - extra_addon_create
     - helm
-    - monitor
+    - monocular
+    - cert-manager
   default:
-    - test
+    - addon_config
+    - extra_addon_config
 
 k8s_host:
   default:
@@ -27,29 +36,35 @@ k8s_host:
       - dcs-ansible03.iad1
       - dcs-ansible04.iad1
     node:
+      - dcs-ansible05.iad1
       - dcs-ansible06.iad1
-      - dcs-ansible08.iad1
 
-cfssl_common:
+k8s_pv:
   default:
-    url: https://pkg.cfssl.org/R1.2
-    bin_dir: "/usr/local/bin"
+    # https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client/deploy
+    nfs:
+      namespace: default
+      provisioner_name: mynfs
+      nfs_server: dcs-filesrv-01.iad1
+      nfs_path: /IAD1_DB_Backup
+      storage_class: managed-nfs-storage
+      config_files:
+        - rbac
+        - deployment
+        - class
 
-cfssl_pkgs:
+k8s_env:
   default:
-    cfssl_linux-amd64:
-      dest: cfssl
-      checksum: sha256:eb34ab2179e0b67c29fd55f52422a94fe751527b06a403a79325fed7cf0145bd
-    cfssljson_linux-amd64:
-      dest: cfssljson
-      checksum: sha256:1c9e628c3b86c3f2f8af56415d474c9ed4c8f9246630bd21c3418dbe5bf6401e
-
-cni_common:
-  default:
-    url: https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz
-# The directory where CFSSL binaries will be installed
-    bin_dir: "/opt/cni/bin"
-    conf_dir: "/etc/cni/net.d"
+    dns_service_ip: 172.23.0.10
+    dns_upstreams:
+      - 10.42.46.51
+      - 10.42.46.52
+    external_dn: k8s.local
+    internal_dn: cluster.local
+    lb_ip_pool: 10.41.239.52-10.41.239.60
+    master_vip: 10.41.239.51
+    pod_cidr: 172.22.0.0/16
+    service_cidr: 172.23.0.0/16
 
 disable_srv_list:
   args:
@@ -67,6 +82,7 @@ common_pkgs:
     check_osver: True
   default:
     7:
+      - bash-completion
       - device-mapper-persistent-data
       - git
       - iftop

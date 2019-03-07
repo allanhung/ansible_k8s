@@ -1,0 +1,33 @@
+- name: generate dashboard root ca csr setting
+  template:
+    src: ca/csr_dashboard_ca.j2
+    dest: /tmp/csr_dashboard_ca.json
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate dashboard root ca
+  shell: cfssl gencert -initca /tmp/csr_dashboard_ca.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/dashboard_ca
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate dashboard csr setting
+  template:
+    src: ca/csr_dashboard.j2
+    dest: /tmp/csr_dashboard.json
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+- name: generate dashboard cert
+  shell: cfssl gencert -ca={{ pillar.ca_common.cert_dir }}/dashboard_ca.pem \
+    -ca-key={{ pillar.ca_common.cert_dir }}/dashboard_ca-key.pem \
+    -config=/tmp/ca_config.json \
+    -hostname=*.{{ pillar.k8s_env.external_dn }},*.{{ pillar.k8s_env.internal_dn }} \
+    -profile=kubernetes \
+    /tmp/csr_dashboard.json | cfssljson -bare {{ pillar.ca_common.cert_dir }}/dashboard
+  when: inventory_hostname == (pillar.k8s_host.master[0])
+
+# dashboard ingress ssl cert
+- name: create secerts for dashboard
+  shell: kubectl --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf -n kube-system \
+    create secret tls {{ pillar.k8s_addon.dashboard.secerts }} \
+    --key {{ pillar.ca_common.cert_dir }}/dashboard-key.pem \
+    --cert {{ pillar.ca_common.cert_dir }}/dashboard.pem \
+    --edit=true
+  when: inventory_hostname == (pillar.k8s_host.master[0])

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nginx
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: nginx.{{ pillar.k8s_network.external_dn }}.
+    external-dns.alpha.kubernetes.io/hostname: nginx.{{ pillar.k8s_env.external_dn }}.
 spec:
   selector:
     app: nginx

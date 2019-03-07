@@ -3,9 +3,12 @@ helm_pkgs:
     url: https://storage.googleapis.com/kubernetes-helm/helm-v2.11.0-linux-amd64.tar.gz
     bin_dir: /usr/local/bin
 
-helm_user:
+helm_files:
+  default:
+    - sa 
+
+helm_users:
   default:
     name: tiller
     role: cluster-admin
     namespace: kube-system
-   

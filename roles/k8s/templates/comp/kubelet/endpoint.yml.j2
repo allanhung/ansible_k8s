@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  labels:
+    k8s-app: kubelet
+  name: kubelet
+  namespace: kube-system
+subsets:
+- addresses:
+{% for myhost in pillar['k8s_host']['master'] %}
+  - ip: {{ hostvars[myhost].ansible_default_ipv4.address }} 
+    targetRef:
+      kind: Node
+      name: {{ myhost }}
+{% endfor %}
+{% for myhost in pillar['k8s_host']['node'] %}
+  - ip: {{ hostvars[myhost].ansible_default_ipv4.address }} 
+    targetRef:
+      kind: Node
+      name: {{ myhost }}
+{% endfor %}
+  ports:
+  - name: http-metrics
+    port: 10255
+    protocol: TCP
+  - name: cadvisor
+    port: 4194
+    protocol: TCP
+  - name: https-metrics
+    port: 10250
+    protocol: TCP

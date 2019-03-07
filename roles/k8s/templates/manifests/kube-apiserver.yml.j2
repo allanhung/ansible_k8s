@@ -13,7 +13,7 @@ spec:
   priorityClassName: system-cluster-critical
   containers :
   - name: kube-apiserver
-    image: k8s.gcr.io/kube-apiserver-amd64:v{{ pillar.k8s_common.version }}
+    image: k8s.gcr.io/kube-apiserver-amd64:v{{ pillar.k8s_pkgs_common.version }}
     command:
       - kube-apiserver
       - --v={{ pillar.k8s_comp.api_server.log_level }}
@@ -22,9 +22,9 @@ spec:
       - --bind-address={{ pillar.k8s_comp.api_server.bind_address }}
       - --secure-port={{ pillar.k8s_comp.api_server.secure_port }}
       - --insecure-port={{ pillar.k8s_comp.api_server.insecure_port }}
-      - --advertise-address={{ pillar.k8s_comp.api_server.vip }}
-      - --service-cluster-ip-range={{ pillar.k8s_network.service_cidr }}
-      - --service-node-port-range={{ pillar.k8s_network.service_port_range }}
+      - --advertise-address={{ pillar.k8s_env.master_vip }}
+      - --service-cluster-ip-range={{ pillar.k8s_env.service_cidr }}
+      - --service-node-port-range={{ pillar.k8s_comp.api_server.service_port_range }}
       - --etcd-servers={% for host in pillar.k8s_host.etcd %}https://{{ hostvars[host].ansible_default_ipv4.address }}:2379{% if not loop.last %},{% endif %}{% endfor %}
 
       - --etcd-cafile={{ pillar.ca_common.cert_dir }}/etcd_ca.pem
@@ -51,9 +51,9 @@ spec:
       - --audit-log-maxage=30
       - --audit-log-maxbackup=3
       - --audit-log-maxsize=128
-      - --audit-log-path={{ pillar.k8s_common.log_dir }}/{{ pillar.k8s_common.audit_log }}
-      - --audit-policy-file={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
-      - --experimental-encryption-provider-config={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+      - --audit-log-path={{ pillar.k8s_common.log_dir }}/{{ pillar.k8s_comp.api_server.audit_log }}
+      - --audit-policy-file={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.audit_policy }}
+      - --experimental-encryption-provider-config={{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.encryption_config }}
       {% if pillar.k8s_comp.api_server.feature_gates != '' -%}
       - --feature-gates={{ pillar.k8s_comp.api_server.feature_gates }}
       {% endif -%}
@@ -76,10 +76,10 @@ spec:
     - mountPath: {{ pillar.ca_common.cert_dir }}
       name: ca-certs
       readOnly: true
-    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.encryption_config }}
       name: encryption-config
       readOnly: true
-    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
+    - mountPath: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.audit_policy }}
       name: audit-policy
       readOnly: true
   volumes:
@@ -92,10 +92,10 @@ spec:
       type: Directory
     name: ca-certs
   - hostPath:
-      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.encryption_config }}
+      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.encryption_config }}
       type: File
     name: encryption-config
   - hostPath:
-      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_common.audit_policy }}
+      path: {{ pillar.k8s_common.conf_dir }}/{{ pillar.k8s_comp.api_server.audit_policy }}
       type: File
     name: audit-policy

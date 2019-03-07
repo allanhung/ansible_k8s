@@ -4,7 +4,7 @@ metadata:
   name: nginx-ingress
 spec:
   rules:
-  - host: nginx.{{ pillar.k8s_network.external_dn }}
+  - host: nginx.{{ pillar.k8s_env.external_dn }}
     http:
       paths:
       - backend:

@@ -15,15 +15,15 @@ data:
       whoami
       health
       prometheus 0.0.0.0:9153
-      proxy . {{ pillar.k8s_addon.coredns_ex.upstreams | join(" ") }}
+      proxy . {{ pillar.k8s_env.dns_upstreams | join(" ") }}
     }
 
-    {{ pillar.k8s_network.external_dn }} {
-      etcd {{ pillar.k8s_network.external_dn }} {
+    {{ pillar.k8s_env.external_dn }} {
+      etcd {{ pillar.k8s_env.external_dn }} {
         stubzones
         path /skydns
         endpoint http://coredns-exetcd:2379
-        upstream {{ pillar.k8s_addon.coredns_ex.upstreams | join(" ") }}
+        upstream {{ pillar.k8s_env.dns_upstreams | join(" ") }}
         debug
       }
       errors

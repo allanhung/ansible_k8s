@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-kafka-lb
+  namespace: {{ pillar.k8s_extra_addon.kafka.namespace }}
+spec:
+  type: LoadBalancer
+  ports:
+  - name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-kafka
+    port: 9092
+    protocol: TCP
+  selector:
+    strimzi.io/name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-kafka
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-zookeeper-lb
+  namespace: {{ pillar.k8s_extra_addon.kafka.namespace }}
+spec:
+  type: LoadBalancer
+  ports:
+  - name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-zookeeper
+    port: 2181
+    protocol: TCP
+  selector:
+    strimzi.io/name: {{ pillar.k8s_extra_addon.kafka.cluster_name }}-zookeeper

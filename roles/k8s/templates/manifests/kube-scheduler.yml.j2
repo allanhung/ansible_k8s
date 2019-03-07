@@ -13,12 +13,12 @@ spec:
   priorityClassName: system-cluster-critical
   containers:
   - name: kube-scheduler
-    image: k8s.gcr.io/kube-scheduler-amd64:v{{ pillar.k8s_common.version }}
+    image: k8s.gcr.io/kube-scheduler-amd64:v{{ pillar.k8s_pkgs_common.version }}
     command:
       - kube-scheduler
       - --v={{ pillar.k8s_comp.scheduler.log_level }}
       - --logtostderr=true
-      - --address=127.0.0.1
+      - --address=0.0.0.0
       - --leader-elect=true
       {% if pillar.k8s_comp.scheduler.feature_gates != '' -%}
       - --feature-gates={{ pillar.k8s_comp.scheduler.feature_gates }}

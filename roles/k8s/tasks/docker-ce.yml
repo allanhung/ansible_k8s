@@ -23,6 +23,15 @@
   when: pillar.docker_env is defined and (pillar.docker_env|length) > 0
   notify: restart docker
       
+- name: set docker option file
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart docker
+
 - name: start docker
   systemd:
     name: docker

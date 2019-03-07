@@ -1,0 +1,10 @@
+monocular_repos:
+  default:
+    - name: monocular
+      url: https://helm.github.io/monocular
+
+monocular_pkgs:
+  default:
+    - repo: monocular
+      name: monocular
+      namespace: kube-system

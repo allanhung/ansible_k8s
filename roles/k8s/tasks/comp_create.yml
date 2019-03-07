@@ -1,0 +1,14 @@
+---
+- name: append key to comp
+  set_fact:
+    pillar_k8s_comp: "{{ pillar_k8s_comp | default(pillar['k8s_comp']) | combine({item: {'key': item}}, recursive=True) }}"
+  loop: "{{ pillar.k8s_comp.keys() }}"
+
+- name: create comp config
+  shell: kubectl --kubeconfig={{ pillar.k8s_common.conf_dir }}/admin.conf apply -f /tmp/comp_{{ item.0.key }}_{{ item.1 }}.yml
+  with_subelements: 
+    - "{{ pillar_k8s_comp }}"
+    - config_files
+    - flags:
+      skip_missing: True
+  when: inventory_hostname in (pillar.k8s_host.master[0])

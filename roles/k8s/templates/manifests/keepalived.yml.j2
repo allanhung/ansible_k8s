@@ -16,7 +16,7 @@ spec:
     image: docker.io/osixia/keepalived:1.4.5
     env:
     - name: KEEPALIVED_VIRTUAL_IPS
-      value: "{{ pillar.k8s_comp.api_server.vip }}"
+      value: "{{ pillar.k8s_env.master_vip }}"
     - name: KEEPALIVED_INTERFACE
       value: "{{ ansible_default_ipv4.interface }}"
     - name: KEEPALIVED_UNICAST_PEERS

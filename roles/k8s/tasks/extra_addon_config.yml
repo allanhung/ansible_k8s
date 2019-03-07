@@ -1,0 +1,16 @@
+---
+- name: append key to extra_addon
+  set_fact:
+    pillar_k8s_extra_addon: "{{ pillar_k8s_extra_addon | default(pillar['k8s_extra_addon']) | combine({item: {'key': item}}, recursive=True) }}"
+  loop: "{{ pillar.k8s_extra_addon.keys() }}"
+
+- name: extra_addon config
+  template:
+    src: extra_addon/{{ item.0.key }}/{{ item.1 }}.yml.j2
+    dest: /tmp/extra_addon_{{ item.0.key }}_{{ item.1 }}.yml
+  with_subelements: 
+    - "{{ pillar_k8s_extra_addon }}"
+    - config_files
+    - flags:
+      skip_missing: True
+  when: inventory_hostname in (pillar.k8s_host.master[0])

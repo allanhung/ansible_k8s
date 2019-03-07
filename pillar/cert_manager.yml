@@ -1,0 +1,12 @@
+cert_manager_pkgs:
+  default:
+    - repo: stable
+      name: cert-manager
+      namespace: kube-system
+
+cert_issuer_config:
+  default:
+    letsencrypt-staging:
+      server: https://acme-staging.api.letsencrypt.org/directory
+      email: hung.allan@gmail.com
+      privateKeySecretRef: letsencrypt-staging

@@ -1,0 +1,14 @@
+k8s_network_addon:
+  default:
+    calico_typha:
+      # if enable ipip (Always, Never)
+      ipip_enable: Never
+      config_files:
+        # https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml
+        - rbac-kdd
+        # https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
+        # modify CALICO_IPV4POOL_IPIP
+        # sed -i -e "s/typha_service_name:.*/typha_service_name: \"calico-typha\"/g" -e "s/replicas:.*/replicas: 1/g" calico.yaml
+        - calico
+        #  https://docs.projectcalico.org/v3.3/getting-started/kubernetes/installation/hosted/calicoctl.yaml
+        - calicoctl

@@ -7,5 +7,5 @@ resources:
       - aescbc:
           keys:
             - name: key1
-              secret: "{{ pillar.k8s_common.encryption_token }}"
+              secret: "{{ pillar.k8s_comp.api_server.encryption_token }}"
       - identity: {}
